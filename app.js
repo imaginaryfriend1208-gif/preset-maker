@@ -45,11 +45,6 @@
         { key: 'repetition_penalty', label: 'Repetition Penalty', min: 0, max: 3, step: 0.01, default: 1 },
     ];
 
-    const CONTEXT_PARAMS = [
-        { key: 'openai_max_context', label: 'Max Context (tokens)', min: 512, max: 200000, step: 1, default: 4095 },
-        { key: 'openai_max_tokens', label: 'Max Response (tokens)', min: 16, max: 50000, step: 1, default: 300 },
-        { key: 'seed', label: 'Seed (-1 = random)', min: -1, max: 999999, step: 1, default: -1 },
-    ];
 
     const MODEL_KEYS = [
         { key: 'openai_model', label: 'OpenAI' },
@@ -82,8 +77,6 @@
     const emptyState = $('emptyState');
     const editorContainer = $('editorContainer');
     const promptOrderList = $('promptOrderList');
-    const settingsGrid = $('settingsGrid');
-    const miscSettingsGrid = $('miscSettingsGrid');
     const modelBadges = $('modelBadges');
     const specialPromptsGrid = $('specialPromptsGrid');
     const jsonPreviewContent = $('jsonPreviewContent');
@@ -663,15 +656,135 @@
     });
 
     // ==================== RENDER SETTINGS ====================
+    // Advanced parameter configs
+    const MIROSTAT_PARAMS = [
+        { key: 'mirostat_mode', label: 'Mirostat Mode', type: 'select', options: [{ v: 0, l: '0 — Tắt' }, { v: 1, l: '1 — Mirostat' }, { v: 2, l: '2 — Mirostat 2.0' }], default: 0 },
+        { key: 'mirostat_tau', label: 'Mirostat Tau', min: 0, max: 10, step: 0.01, default: 5 },
+        { key: 'mirostat_eta', label: 'Mirostat Eta', min: 0, max: 1, step: 0.01, default: 0.1 },
+    ];
+
+    const DRY_PARAMS = [
+        { key: 'dry_multiplier', label: 'DRY Multiplier', min: 0, max: 5, step: 0.01, default: 0 },
+        { key: 'dry_base', label: 'DRY Base', min: 1, max: 4, step: 0.01, default: 1.75 },
+        { key: 'dry_allowed_length', label: 'DRY Allowed Length', min: 1, max: 20, step: 1, default: 2 },
+    ];
+
+    const DYNTEMP_PARAMS = [
+        { key: 'dynatemp_low', label: 'Dynatemp Low', min: 0, max: 2, step: 0.01, default: 0 },
+        { key: 'dynatemp_high', label: 'Dynatemp High', min: 0, max: 2, step: 0.01, default: 0 },
+        { key: 'dynatemp_exponent', label: 'Dynatemp Exponent', min: 0.01, max: 5, step: 0.01, default: 1 },
+    ];
+
+    const CFG_PARAMS = [
+        { key: 'guidance_scale', label: 'Guidance Scale (CFG)', min: 1, max: 30, step: 0.5, default: 1 },
+    ];
+
+    const CUTOFF_PARAMS = [
+        { key: 'epsilon_cutoff', label: 'Epsilon Cutoff', min: 0, max: 9, step: 0.01, default: 0 },
+        { key: 'eta_cutoff', label: 'Eta Cutoff', min: 0, max: 20, step: 0.01, default: 0 },
+    ];
+
+    const MISC_PARAMS = [
+        { key: 'openai_max_context', label: 'Max Context (tokens)', min: 512, max: 200000, step: 1, default: 4095 },
+        { key: 'openai_max_tokens', label: 'Max Response (tokens)', min: 16, max: 50000, step: 1, default: 300 },
+        { key: 'seed', label: 'Seed (-1 = random)', min: -1, max: 999999, step: 1, default: -1 },
+        { key: 'n', label: 'N (completions)', min: 1, max: 10, step: 1, default: 1 },
+    ];
+
+    const BOOL_FLAGS = [
+        { key: 'stream_openai', label: 'Stream Response' },
+        { key: 'max_context_unlocked', label: 'Unlock Max Context' },
+        { key: 'use_sysprompt', label: 'Use System Prompt' },
+        { key: 'squash_system_messages', label: 'Squash System Messages' },
+        { key: 'media_inlining', label: 'Media Inlining' },
+        { key: 'bypass_status_check', label: 'Bypass Status Check' },
+        { key: 'continue_prefill', label: 'Continue Prefill' },
+    ];
+
+    const SAMPLER_NAMES = {
+        0: 'Top-K', 1: 'Top-A', 2: 'Top-P', 3: 'TFS',
+        4: 'Epsilon Cutoff', 5: 'Eta Cutoff', 6: 'Rep Penalty',
+        7: 'Temperature', 8: 'Min-P',
+    };
+
     function renderSettings(data) {
-        settingsGrid.innerHTML = '';
-        SAMPLING_PARAMS.forEach(param => {
-            settingsGrid.appendChild(createSliderCard(data, param));
+        // Core Sampling
+        const coreSamplingGrid = $('coreSamplingGrid');
+        coreSamplingGrid.innerHTML = '';
+        SAMPLING_PARAMS.forEach(p => coreSamplingGrid.appendChild(createSliderCard(data, p)));
+
+        // Context
+        const contextGrid = $('contextGrid');
+        contextGrid.innerHTML = '';
+        [
+            { key: 'openai_max_context', label: 'Max Context (tokens)', min: 512, max: 200000, step: 1, default: 4095 },
+            { key: 'openai_max_tokens', label: 'Max Response (tokens)', min: 16, max: 50000, step: 1, default: 300 },
+        ].forEach(p => contextGrid.appendChild(createSliderCard(data, p)));
+
+        // Advanced - Mirostat
+        const mirostatRow = $('mirostatRow');
+        mirostatRow.innerHTML = '';
+        MIROSTAT_PARAMS.forEach(p => {
+            if (p.type === 'select') {
+                mirostatRow.appendChild(createSelectCard(data, p));
+            } else {
+                mirostatRow.appendChild(createSliderCard(data, p));
+            }
         });
 
+        // Advanced - DRY
+        const dryRow = $('dryRow');
+        dryRow.innerHTML = '';
+        DRY_PARAMS.forEach(p => dryRow.appendChild(createSliderCard(data, p)));
+        const drySeqBreakers = $('drySeqBreakers');
+        drySeqBreakers.innerHTML = '';
+        drySeqBreakers.appendChild(createTextCard(data, 'dry_sequence_breakers', 'DRY Sequence Breakers', '["\\n", ":", "\\"", "*"]'));
+
+        // Advanced - Dynamic Temp
+        const dynTempRow = $('dynTempRow');
+        dynTempRow.innerHTML = '';
+        DYNTEMP_PARAMS.forEach(p => dynTempRow.appendChild(createSliderCard(data, p)));
+
+        // Advanced - CFG
+        const cfgRow = $('cfgRow');
+        cfgRow.innerHTML = '';
+        CFG_PARAMS.forEach(p => cfgRow.appendChild(createSliderCard(data, p)));
+        const cfgNegPrompt = $('cfgNegPrompt');
+        cfgNegPrompt.innerHTML = '';
+        cfgNegPrompt.appendChild(createTextareaCard(data, 'negative_prompt', 'Negative Prompt', 'Prompt tiêu cực cho CFG...'));
+
+        // Advanced - Cutoffs
+        const cutoffRow = $('cutoffRow');
+        cutoffRow.innerHTML = '';
+        CUTOFF_PARAMS.forEach(p => cutoffRow.appendChild(createSliderCard(data, p)));
+
+        // Advanced - Sampler Order
+        renderSamplerOrder(data);
+
+        // Other - Misc
+        const miscSettingsGrid = $('miscSettingsGrid');
         miscSettingsGrid.innerHTML = '';
-        CONTEXT_PARAMS.forEach(param => {
-            miscSettingsGrid.appendChild(createSliderCard(data, param));
+        MISC_PARAMS.forEach(p => miscSettingsGrid.appendChild(createSliderCard(data, p)));
+
+        // Other - Bool flags
+        const boolFlagsGrid = $('boolFlagsGrid');
+        boolFlagsGrid.innerHTML = '';
+        BOOL_FLAGS.forEach(flag => {
+            const item = document.createElement('div');
+            item.className = 'bool-flag-item';
+            item.innerHTML = `
+                <label class="toggle-switch">
+                    <input type="checkbox" ${data[flag.key] ? 'checked' : ''}>
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="flag-label">${flag.label}</span>
+            `;
+            const tog = item.querySelector('input');
+            tog.addEventListener('change', () => {
+                data[flag.key] = tog.checked;
+                renderJsonPreview(data);
+            });
+            boolFlagsGrid.appendChild(item);
         });
     }
 
@@ -681,7 +794,7 @@
         card.className = 'setting-card';
         card.innerHTML = `
             <div class="setting-card-header">
-                <label>${param.label}</label>
+                <label><span class="param-dot"></span>${param.label}</label>
                 <span class="setting-value">${val}</span>
             </div>
             <input type="range" class="setting-slider"
@@ -696,6 +809,101 @@
             renderJsonPreview(data);
         });
         return card;
+    }
+
+    function createSelectCard(data, param) {
+        const val = data[param.key] ?? param.default;
+        const card = document.createElement('div');
+        card.className = 'setting-select-card';
+        const optionsHtml = param.options.map(o => `<option value="${o.v}" ${val == o.v ? 'selected' : ''}>${o.l}</option>`).join('');
+        card.innerHTML = `
+            <label>${param.label}</label>
+            <select>${optionsHtml}</select>
+        `;
+        const sel = card.querySelector('select');
+        sel.addEventListener('change', () => {
+            data[param.key] = parseInt(sel.value);
+            renderJsonPreview(data);
+        });
+        return card;
+    }
+
+    function createTextCard(data, key, label, placeholder) {
+        const val = data[key] ?? '';
+        const card = document.createElement('div');
+        card.className = 'setting-text-card';
+        card.innerHTML = `<label>${label}</label><input type="text" value="${escapeHtml(typeof val === 'string' ? val : JSON.stringify(val))}" placeholder="${placeholder}">`;
+        const input = card.querySelector('input');
+        input.addEventListener('change', () => {
+            try { data[key] = JSON.parse(input.value); } catch { data[key] = input.value; }
+            renderJsonPreview(data);
+        });
+        return card;
+    }
+
+    function createTextareaCard(data, key, label, placeholder) {
+        const val = data[key] ?? '';
+        const card = document.createElement('div');
+        card.className = 'setting-text-card';
+        card.innerHTML = `<label>${label}</label><textarea placeholder="${placeholder}">${escapeHtml(val)}</textarea>`;
+        const ta = card.querySelector('textarea');
+        ta.addEventListener('input', () => {
+            data[key] = ta.value;
+            renderJsonPreview(data);
+        });
+        return card;
+    }
+
+    // ==================== SAMPLER ORDER ====================
+    function renderSamplerOrder(data) {
+        const list = $('samplerOrderList');
+        list.innerHTML = '';
+        if (!data.sampler_order) {
+            data.sampler_order = [6, 0, 1, 3, 4, 5, 2, 7, 8]; // default order
+        }
+        const order = data.sampler_order;
+
+        order.forEach((id, idx) => {
+            const name = SAMPLER_NAMES[id] || `Sampler ${id}`;
+            const el = document.createElement('div');
+            el.className = 'sampler-order-item';
+            el.draggable = true;
+            el.dataset.index = idx;
+            el.innerHTML = `
+                <div class="order-handle">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                </div>
+                <span class="order-index">${idx + 1}</span>
+                <span class="order-name">${name}</span>
+                <span class="order-id">${id}</span>
+            `;
+
+            el.addEventListener('dragstart', (e) => {
+                el.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', idx.toString());
+            });
+            el.addEventListener('dragend', () => el.classList.remove('dragging'));
+            el.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                el.classList.add('drag-over');
+            });
+            el.addEventListener('dragleave', () => el.classList.remove('drag-over'));
+            el.addEventListener('drop', (e) => {
+                e.preventDefault();
+                el.classList.remove('drag-over');
+                const fromIdx = parseInt(e.dataTransfer.getData('text/plain'));
+                const toIdx = idx;
+                if (fromIdx === toIdx) return;
+                const [moved] = order.splice(fromIdx, 1);
+                order.splice(toIdx, 0, moved);
+                renderSamplerOrder(data);
+                renderJsonPreview(data);
+                toast('Sampler order updated');
+            });
+
+            list.appendChild(el);
+        });
     }
 
     // ==================== RENDER MODEL BADGES ====================
@@ -775,6 +983,18 @@
         });
     });
 
+    // ==================== SUB-TABS ====================
+    document.querySelectorAll('.sub-tab-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            document.querySelectorAll('.sub-tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.sub-tab-panel').forEach(p => p.classList.remove('active'));
+            btn.classList.add('active');
+            const subtab = btn.dataset.subtab;
+            $('subtab-' + subtab).classList.add('active');
+        });
+    });
+
     // ==================== INIT ====================
     showEmptyState();
 })();
+

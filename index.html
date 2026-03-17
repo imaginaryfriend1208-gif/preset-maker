@@ -77,9 +77,6 @@
                 <button class="tab-btn" data-tab="settings">
                     <span>⚙️</span> Generation Settings
                 </button>
-                <button class="tab-btn" data-tab="special">
-                    <span>💬</span> Special Prompts
-                </button>
                 <button class="tab-btn" data-tab="json">
                     <span>{ }</span> JSON Preview
                 </button>
@@ -102,30 +99,81 @@
 
                 <!-- Tab: Generation Settings -->
                 <div class="tab-panel" id="tab-settings">
-                    <div class="section-title">Model Configuration</div>
-                    <div class="model-badges" id="modelBadges">
-                        <!-- dynamically populated -->
+                    <!-- Model badges row -->
+                    <div class="model-badges" id="modelBadges"></div>
+
+                    <!-- Sub-tabs for settings categories -->
+                    <div class="sub-tab-bar">
+                        <button class="sub-tab-btn active" data-subtab="core">Core Sampling</button>
+                        <button class="sub-tab-btn" data-subtab="advanced">Nâng Cao</button>
+                        <button class="sub-tab-btn" data-subtab="prompt">Prompt</button>
+                        <button class="sub-tab-btn" data-subtab="other">Khác</button>
                     </div>
 
-                    <div class="section-title">Sampling Parameters</div>
-                    <div class="settings-grid" id="settingsGrid">
-                        <!-- dynamically populated -->
-                    </div>
+                    <div class="settings-panel-content">
+                        <!-- Sub: Core Sampling -->
+                        <div class="sub-tab-panel active" id="subtab-core">
+                            <div class="param-section">
+                                <div class="param-section-title">SAMPLING CƠ BẢN</div>
+                                <div class="settings-grid" id="coreSamplingGrid"></div>
+                            </div>
+                            <div class="param-section">
+                                <div class="param-section-title">CONTEXT & RESPONSE</div>
+                                <div class="settings-grid" id="contextGrid"></div>
+                            </div>
+                        </div>
 
-                    <div class="section-title">Miscellaneous</div>
-                    <div class="settings-grid" id="miscSettingsGrid">
-                        <!-- dynamically populated -->
-                    </div>
-                </div>
+                        <!-- Sub: Advanced -->
+                        <div class="sub-tab-panel" id="subtab-advanced">
+                            <div class="param-section">
+                                <div class="param-section-title">MIROSTAT</div>
+                                <div class="param-row" id="mirostatRow"></div>
+                            </div>
+                            <div class="param-section">
+                                <div class="param-section-title">DRY SAMPLER</div>
+                                <div class="param-row" id="dryRow"></div>
+                                <div class="param-field" id="drySeqBreakers"></div>
+                            </div>
+                            <div class="param-section">
+                                <div class="param-section-title">DYNAMIC TEMPERATURE</div>
+                                <div class="param-row" id="dynTempRow"></div>
+                            </div>
+                            <div class="param-section">
+                                <div class="param-section-title">CFG / GUIDANCE</div>
+                                <div class="param-row" id="cfgRow"></div>
+                                <div class="param-field" id="cfgNegPrompt"></div>
+                            </div>
+                            <div class="param-section">
+                                <div class="param-section-title">EPSILON / ETA CUTOFF</div>
+                                <div class="param-row" id="cutoffRow"></div>
+                            </div>
+                            <div class="param-section">
+                                <div class="param-section-title">SAMPLER ORDER</div>
+                                <p class="param-hint">Kéo để thay đổi thứ tự áp dụng sampler (trên cùng = áp dụng trước)</p>
+                                <div class="sampler-order-list" id="samplerOrderList"></div>
+                            </div>
+                        </div>
 
-                <!-- Tab: Special Prompts -->
-                <div class="tab-panel" id="tab-special">
-                    <div class="section-title">Special Prompt Templates</div>
-                    <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:16px;">
-                        These are template prompts used by SillyTavern for specific actions. Use <code style="color:var(--accent-secondary)">{{char}}</code> and <code style="color:var(--accent-secondary)">{{user}}</code> macros.
-                    </p>
-                    <div class="special-prompts-grid" id="specialPromptsGrid">
-                        <!-- dynamically populated -->
+                        <!-- Sub: Prompt (Special Prompts moved here) -->
+                        <div class="sub-tab-panel" id="subtab-prompt">
+                            <div class="param-section">
+                                <div class="param-section-title">PROMPT TEMPLATES</div>
+                                <p class="param-hint">Sử dụng <code>{{char}}</code> và <code>{{user}}</code> macros.</p>
+                                <div class="special-prompts-grid" id="specialPromptsGrid"></div>
+                            </div>
+                        </div>
+
+                        <!-- Sub: Other -->
+                        <div class="sub-tab-panel" id="subtab-other">
+                            <div class="param-section">
+                                <div class="param-section-title">MISC SETTINGS</div>
+                                <div class="settings-grid" id="miscSettingsGrid"></div>
+                            </div>
+                            <div class="param-section">
+                                <div class="param-section-title">BOOLEAN FLAGS</div>
+                                <div class="bool-flags-grid" id="boolFlagsGrid"></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
