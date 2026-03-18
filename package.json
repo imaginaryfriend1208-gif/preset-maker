@@ -3,6 +3,6 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "start": "npx -y serve -s . -l $PORT --no-clipboard"
+        "start": "npx -y serve . -l $PORT --no-clipboard"
     }
 }
