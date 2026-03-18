@@ -453,8 +453,7 @@ body {
 
 /* Prompt Item */
 .prompt-item {
-    display: grid;
-    grid-template-columns: 24px auto minmax(0, 1fr) auto auto;
+    display: flex;
     align-items: center;
     gap: 10px;
     padding: 10px 14px;
@@ -492,6 +491,7 @@ body {
     cursor: grab;
     display: flex;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .prompt-item .drag-handle svg {
@@ -510,6 +510,7 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.05em;
     white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .badge-marker {
@@ -530,6 +531,7 @@ body {
 .prompt-item > div {
     min-width: 0;
     overflow: hidden;
+    flex: 1;
 }
 
 .prompt-item .prompt-name {
@@ -607,6 +609,7 @@ body {
     display: flex;
     align-items: center;
     transition: all var(--transition-fast);
+    flex-shrink: 0;
 }
 
 .prompt-edit-btn:hover {
