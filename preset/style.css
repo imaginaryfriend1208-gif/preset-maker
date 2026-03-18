@@ -454,7 +454,7 @@ body {
 /* Prompt Item */
 .prompt-item {
     display: grid;
-    grid-template-columns: 24px auto 1fr auto auto;
+    grid-template-columns: 24px auto minmax(0, 1fr) auto auto;
     align-items: center;
     gap: 10px;
     padding: 10px 14px;
@@ -464,6 +464,7 @@ body {
     transition: all var(--transition-fast);
     cursor: grab;
     user-select: none;
+    min-width: 0;
 }
 
 .prompt-item:hover {
@@ -526,6 +527,11 @@ body {
     color: var(--color-custom);
 }
 
+.prompt-item > div {
+    min-width: 0;
+    overflow: hidden;
+}
+
 .prompt-item .prompt-name {
     font-size: 0.85rem;
     font-weight: 500;
@@ -539,6 +545,12 @@ body {
     color: var(--text-muted);
     font-family: 'JetBrains Mono', monospace;
     margin-left: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+    display: inline-block;
+    vertical-align: middle;
 }
 
 /* Toggle switch */
