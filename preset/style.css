@@ -528,7 +528,7 @@ body {
     color: var(--color-custom);
 }
 
-.prompt-item > div {
+.prompt-item > div:not(.drag-handle) {
     min-width: 0;
     overflow: hidden;
     flex: 1;
