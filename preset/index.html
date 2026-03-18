@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ST Preset Manager</title>
+    <meta name="description" content="Visual editor for SillyTavern Chat Completion presets">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="app-layout">
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-left">
+            <div class="app-logo">
+                <svg viewBox="0 0 24 24" fill="none" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <defs><linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c5cfc"/><stop offset="100%" stop-color="#c4b5fd"/></linearGradient></defs>
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                </svg>
+                ST Preset Manager
+            </div>
+            <div class="preset-name-display" id="presetNameDisplay">No preset loaded</div>
+        </div>
+        <div class="header-right">
+            <button class="btn btn-secondary" id="btnNewPreset" title="Create new blank preset">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                New
+            </button>
+            <button class="btn btn-primary" id="btnExport" disabled title="Export preset as JSON">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export
+            </button>
+        </div>
+    </header>
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h3>Presets</h3>
+            <div class="drop-zone" id="dropZone">
+                <svg class="drop-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                <p>Drop <strong>.json</strong> preset files<br>or click to browse</p>
+                <input type="file" id="fileInput" accept=".json" multiple>
+            </div>
+        </div>
+        <div class="preset-list" id="presetList">
+            <!-- dynamically populated -->
+        </div>
+        <div class="sidebar-actions">
+            <button class="btn btn-secondary" style="width:100%" id="btnLoadSample">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Load Sample Preset
+            </button>
+        </div>
+    </aside>
+
+    <!-- Main Panel -->
+    <main class="main-panel" id="mainPanel">
+        <!-- Empty state -->
+        <div class="empty-state" id="emptyState">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
+            </svg>
+            <h2>No Preset Loaded</h2>
+            <p>Drop a SillyTavern preset JSON file in the sidebar, or create a new one to get started.</p>
+        </div>
+
+        <!-- Editor (hidden until a preset is loaded) -->
+        <div id="editorContainer" style="display:none;">
+            <div class="tab-bar">
+                <button class="tab-btn active" data-tab="prompts">
+                    <span>📝</span> Prompts & Order
+                </button>
+                <button class="tab-btn" data-tab="settings">
+                    <span>⚙️</span> Generation Settings
+                </button>
+                <button class="tab-btn" data-tab="json">
+                    <span>{ }</span> JSON Preview
+                </button>
+            </div>
+            <div class="tab-content">
+                <!-- Tab: Prompts & Order -->
+                <div class="tab-panel active" id="tab-prompts">
+                    <div class="section-title">Prompt Injection Order</div>
+                    <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:16px;">
+                        Drag to reorder. Toggle to enable/disable. Click ✏️ to edit prompt content.
+                    </p>
+                    <div class="prompt-list" id="promptOrderList">
+                        <!-- dynamically populated -->
+                    </div>
+                    <button class="add-prompt-btn" id="btnAddPrompt">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+                        Add Custom Prompt
+                    </button>
+                </div>
+
+                <!-- Tab: Generation Settings -->
+                <div class="tab-panel" id="tab-settings">
+                    <!-- Model badges row -->
+                    <div class="model-badges" id="modelBadges"></div>
+
+                    <!-- Sub-tabs for settings categories -->
+                    <div class="sub-tab-bar">
+                        <button class="sub-tab-btn active" data-subtab="core">Core Sampling</button>
+                        <button class="sub-tab-btn" data-subtab="advanced">Nâng Cao</button>
+                        <button class="sub-tab-btn" data-subtab="prompt">Prompt</button>
+                        <button class="sub-tab-btn" data-subtab="other">Khác</button>
+                    </div>
+
+                    <div class="settings-panel-content">
+                        <!-- Sub: Core Sampling -->
+                        <div class="sub-tab-panel active" id="subtab-core">
+                            <div class="param-section">
+                                <div class="param-section-title">SAMPLING CƠ BẢN</div>
+                                <div class="settings-grid" id="coreSamplingGrid"></div>
+                            </div>
+                            <div class="param-section">
+                                <div class="param-section-title">CONTEXT & RESPONSE</div>
+                                <div class="settings-grid" id="contextGrid"></div>
+                            </div>
+                        </div>
+
+                        <!-- Sub: Advanced -->
+                        <div class="sub-tab-panel" id="subtab-advanced">
+                            <div class="param-section">
+                                <div class="param-section-title">MIROSTAT</div>
+                                <div class="param-row" id="mirostatRow"></div>
+                            </div>
+                            <div class="param-section">
+                                <div class="param-section-title">DRY SAMPLER</div>
+                                <div class="param-row" id="dryRow"></div>
+                                <div class="param-field" id="drySeqBreakers"></div>
+                            </div>
+                            <div class="param-section">
+                                <div class="param-section-title">DYNAMIC TEMPERATURE</div>
+                                <div class="param-row" id="dynTempRow"></div>
+                            </div>
+                            <div class="param-section">
+                                <div class="param-section-title">CFG / GUIDANCE</div>
+                                <div class="param-row" id="cfgRow"></div>
+                                <div class="param-field" id="cfgNegPrompt"></div>
+                            </div>
+                            <div class="param-section">
+                                <div class="param-section-title">EPSILON / ETA CUTOFF</div>
+                                <div class="param-row" id="cutoffRow"></div>
+                            </div>
+                            <div class="param-section">
+                                <div class="param-section-title">SAMPLER ORDER</div>
+                                <p class="param-hint">Kéo để thay đổi thứ tự áp dụng sampler (trên cùng = áp dụng trước)</p>
+                                <div class="sampler-order-list" id="samplerOrderList"></div>
+                            </div>
+                        </div>
+
+                        <!-- Sub: Prompt (Special Prompts moved here) -->
+                        <div class="sub-tab-panel" id="subtab-prompt">
+                            <div class="param-section">
+                                <div class="param-section-title">PROMPT TEMPLATES</div>
+                                <p class="param-hint">Sử dụng <code>{{char}}</code> và <code>{{user}}</code> macros.</p>
+                                <div class="special-prompts-grid" id="specialPromptsGrid"></div>
+                            </div>
+                        </div>
+
+                        <!-- Sub: Other -->
+                        <div class="sub-tab-panel" id="subtab-other">
+                            <div class="param-section">
+                                <div class="param-section-title">MISC SETTINGS</div>
+                                <div class="settings-grid" id="miscSettingsGrid"></div>
+                            </div>
+                            <div class="param-section">
+                                <div class="param-section-title">BOOLEAN FLAGS</div>
+                                <div class="bool-flags-grid" id="boolFlagsGrid"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab: JSON Preview -->
+                <div class="tab-panel" id="tab-json">
+                    <div class="section-title">Raw JSON Output</div>
+                    <div class="json-preview-container">
+                        <button class="btn btn-ghost copy-json-btn" id="btnCopyJson" title="Copy JSON">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            Copy
+                        </button>
+                        <div class="json-preview" id="jsonPreview">
+                            <pre id="jsonPreviewContent"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Prompt Edit Modal -->
+<div class="modal-overlay" id="promptModal">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="modalTitle">Edit Prompt</h3>
+            <button class="btn btn-ghost" id="btnCloseModal">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="modal-body">
+            <div class="form-row">
+                <div class="form-group">
+                    <label class="form-label">Name</label>
+                    <input class="form-input" id="modalPromptName" placeholder="Prompt name">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Role</label>
+                    <select class="form-select" id="modalPromptRole">
+                        <option value="system">System</option>
+                        <option value="user">User</option>
+                        <option value="assistant">Assistant</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="form-label">Identifier</label>
+                <input class="form-input" id="modalPromptId" placeholder="unique_identifier" style="font-family:'JetBrains Mono',monospace; font-size:0.82rem;">
+            </div>
+            <div class="form-group">
+                <label class="form-label">Content</label>
+                <textarea class="form-textarea" id="modalPromptContent" placeholder="Write your prompt here... Use {{char}} and {{user}} macros." rows="8"></textarea>
+            </div>
+            <div class="form-group" style="display:flex; align-items:center; gap:10px;">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="modalPromptMarker">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span style="font-size:0.82rem; color:var(--text-secondary);">This is a marker (content injected by engine)</span>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn btn-danger" id="btnDeletePrompt" style="margin-right:auto;">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                Delete
+            </button>
+            <button class="btn btn-secondary" id="btnCancelModal">Cancel</button>
+            <button class="btn btn-primary" id="btnSavePrompt">Save Changes</button>
+        </div>
+    </div>
+</div>
+
+<!-- Toast container -->
+<div class="toast-container" id="toastContainer"></div>
+
+<script src="app.js"></script>
+</body>
+</html>

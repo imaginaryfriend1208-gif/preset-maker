@@ -1,254 +1,351 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ST Preset Manager</title>
-    <meta name="description" content="Visual editor for SillyTavern Chat Completion presets">
-    <link rel="stylesheet" href="style.css">
+    <title>Roxie Tools — Bộ công cụ AI</title>
+    <meta name="description" content="Bộ công cụ hỗ trợ cho SillyTavern và AI chatting — preset manager, prompt builder, và nhiều hơn nữa.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #06060b;
+            --bg-card: rgba(26, 26, 42, 0.6);
+            --accent: #7c5cfc;
+            --accent-light: #a78bfa;
+            --accent-glow: rgba(124, 92, 252, 0.15);
+            --text: #f0f0f5;
+            --text-dim: #9ca3af;
+            --text-muted: #6b7280;
+            --border: rgba(255,255,255,0.06);
+            --radius: 16px;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Animated background */
+        .bg-effects {
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            overflow: hidden;
+            pointer-events: none;
+        }
+        .bg-effects .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(100px);
+            opacity: 0.15;
+            animation: float 20s ease-in-out infinite;
+        }
+        .bg-effects .orb:nth-child(1) {
+            width: 600px; height: 600px;
+            background: var(--accent);
+            top: -200px; left: -100px;
+        }
+        .bg-effects .orb:nth-child(2) {
+            width: 500px; height: 500px;
+            background: #ec4899;
+            bottom: -150px; right: -100px;
+            animation-delay: -7s;
+            animation-duration: 25s;
+        }
+        .bg-effects .orb:nth-child(3) {
+            width: 400px; height: 400px;
+            background: #38bdf8;
+            top: 40%; left: 50%;
+            animation-delay: -14s;
+            animation-duration: 30s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(30px, -40px) scale(1.05); }
+            50% { transform: translate(-20px, 20px) scale(0.95); }
+            75% { transform: translate(40px, 30px) scale(1.02); }
+        }
+
+        /* Content */
+        .content {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            width: 100%;
+            padding: 40px 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Header */
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 60px;
+            margin-bottom: 12px;
+        }
+        .brand-icon {
+            width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-light));
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            box-shadow: 0 4px 20px rgba(124, 92, 252, 0.3);
+        }
+        .brand-name {
+            font-size: 1.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        .brand-name span {
+            background: linear-gradient(135deg, var(--accent-light), #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tagline {
+            font-size: 1rem;
+            color: var(--text-dim);
+            text-align: center;
+            max-width: 500px;
+            line-height: 1.6;
+            margin-bottom: 48px;
+        }
+
+        /* Tools Grid */
+        .tools-label {
+            font-size: 0.72rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: var(--text-muted);
+            margin-bottom: 16px;
+            align-self: flex-start;
+        }
+
+        .tools-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            width: 100%;
+            margin-bottom: 48px;
+        }
+
+        /* Tool Card */
+        .tool-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 28px 24px;
+            text-decoration: none;
+            color: inherit;
+            transition: all 250ms cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tool-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(124, 92, 252, 0.06), transparent 60%);
+            opacity: 0;
+            transition: opacity 300ms;
+        }
+
+        .tool-card:hover {
+            border-color: rgba(124, 92, 252, 0.3);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3), 0 0 40px rgba(124, 92, 252, 0.08);
+        }
+
+        .tool-card:hover::before {
+            opacity: 1;
+        }
+
+        .tool-card-icon {
+            width: 48px; height: 48px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 22px;
+            flex-shrink: 0;
+        }
+
+        .tool-card-icon.preset {
+            background: linear-gradient(135deg, rgba(124, 92, 252, 0.2), rgba(167, 139, 250, 0.1));
+            color: var(--accent-light);
+        }
+
+        .tool-card-icon.coming {
+            background: rgba(107, 114, 128, 0.15);
+            color: var(--text-muted);
+        }
+
+        .tool-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tool-card-desc {
+            font-size: 0.82rem;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        .tool-card-arrow {
+            position: absolute;
+            top: 24px; right: 24px;
+            width: 28px; height: 28px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.04);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            transition: all 200ms;
+        }
+
+        .tool-card:hover .tool-card-arrow {
+            background: var(--accent-glow);
+            color: var(--accent-light);
+            transform: translateX(2px);
+        }
+
+        .badge-soon {
+            font-size: 0.62rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: rgba(107, 114, 128, 0.2);
+            color: var(--text-muted);
+        }
+
+        .badge-live {
+            font-size: 0.62rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            padding: 2px 8px;
+            border-radius: 20px;
+            background: rgba(52, 211, 153, 0.15);
+            color: #34d399;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: auto;
+            padding: 32px 24px;
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .footer a {
+            color: var(--accent-light);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .brand { margin-top: 40px; }
+            .tools-grid { grid-template-columns: 1fr; }
+        }
+    </style>
 </head>
 <body>
 
-<div class="app-layout">
-    <!-- Header -->
-    <header class="app-header">
-        <div class="header-left">
-            <div class="app-logo">
-                <svg viewBox="0 0 24 24" fill="none" stroke="url(#logoGrad)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <defs><linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c5cfc"/><stop offset="100%" stop-color="#c4b5fd"/></linearGradient></defs>
-                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
-                </svg>
-                ST Preset Manager
-            </div>
-            <div class="preset-name-display" id="presetNameDisplay">No preset loaded</div>
-        </div>
-        <div class="header-right">
-            <button class="btn btn-secondary" id="btnNewPreset" title="Create new blank preset">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-                New
-            </button>
-            <button class="btn btn-primary" id="btnExport" disabled title="Export preset as JSON">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                Export
-            </button>
-        </div>
-    </header>
-
-    <!-- Sidebar -->
-    <aside class="sidebar">
-        <div class="sidebar-header">
-            <h3>Presets</h3>
-            <div class="drop-zone" id="dropZone">
-                <svg class="drop-zone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
-                </svg>
-                <p>Drop <strong>.json</strong> preset files<br>or click to browse</p>
-                <input type="file" id="fileInput" accept=".json" multiple>
-            </div>
-        </div>
-        <div class="preset-list" id="presetList">
-            <!-- dynamically populated -->
-        </div>
-        <div class="sidebar-actions">
-            <button class="btn btn-secondary" style="width:100%" id="btnLoadSample">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                Load Sample Preset
-            </button>
-        </div>
-    </aside>
-
-    <!-- Main Panel -->
-    <main class="main-panel" id="mainPanel">
-        <!-- Empty state -->
-        <div class="empty-state" id="emptyState">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                <rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M9 21V9"/>
-            </svg>
-            <h2>No Preset Loaded</h2>
-            <p>Drop a SillyTavern preset JSON file in the sidebar, or create a new one to get started.</p>
-        </div>
-
-        <!-- Editor (hidden until a preset is loaded) -->
-        <div id="editorContainer" style="display:none;">
-            <div class="tab-bar">
-                <button class="tab-btn active" data-tab="prompts">
-                    <span>📝</span> Prompts & Order
-                </button>
-                <button class="tab-btn" data-tab="settings">
-                    <span>⚙️</span> Generation Settings
-                </button>
-                <button class="tab-btn" data-tab="json">
-                    <span>{ }</span> JSON Preview
-                </button>
-            </div>
-            <div class="tab-content">
-                <!-- Tab: Prompts & Order -->
-                <div class="tab-panel active" id="tab-prompts">
-                    <div class="section-title">Prompt Injection Order</div>
-                    <p style="font-size:0.78rem; color:var(--text-muted); margin-bottom:16px;">
-                        Drag to reorder. Toggle to enable/disable. Click ✏️ to edit prompt content.
-                    </p>
-                    <div class="prompt-list" id="promptOrderList">
-                        <!-- dynamically populated -->
-                    </div>
-                    <button class="add-prompt-btn" id="btnAddPrompt">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
-                        Add Custom Prompt
-                    </button>
-                </div>
-
-                <!-- Tab: Generation Settings -->
-                <div class="tab-panel" id="tab-settings">
-                    <!-- Model badges row -->
-                    <div class="model-badges" id="modelBadges"></div>
-
-                    <!-- Sub-tabs for settings categories -->
-                    <div class="sub-tab-bar">
-                        <button class="sub-tab-btn active" data-subtab="core">Core Sampling</button>
-                        <button class="sub-tab-btn" data-subtab="advanced">Nâng Cao</button>
-                        <button class="sub-tab-btn" data-subtab="prompt">Prompt</button>
-                        <button class="sub-tab-btn" data-subtab="other">Khác</button>
-                    </div>
-
-                    <div class="settings-panel-content">
-                        <!-- Sub: Core Sampling -->
-                        <div class="sub-tab-panel active" id="subtab-core">
-                            <div class="param-section">
-                                <div class="param-section-title">SAMPLING CƠ BẢN</div>
-                                <div class="settings-grid" id="coreSamplingGrid"></div>
-                            </div>
-                            <div class="param-section">
-                                <div class="param-section-title">CONTEXT & RESPONSE</div>
-                                <div class="settings-grid" id="contextGrid"></div>
-                            </div>
-                        </div>
-
-                        <!-- Sub: Advanced -->
-                        <div class="sub-tab-panel" id="subtab-advanced">
-                            <div class="param-section">
-                                <div class="param-section-title">MIROSTAT</div>
-                                <div class="param-row" id="mirostatRow"></div>
-                            </div>
-                            <div class="param-section">
-                                <div class="param-section-title">DRY SAMPLER</div>
-                                <div class="param-row" id="dryRow"></div>
-                                <div class="param-field" id="drySeqBreakers"></div>
-                            </div>
-                            <div class="param-section">
-                                <div class="param-section-title">DYNAMIC TEMPERATURE</div>
-                                <div class="param-row" id="dynTempRow"></div>
-                            </div>
-                            <div class="param-section">
-                                <div class="param-section-title">CFG / GUIDANCE</div>
-                                <div class="param-row" id="cfgRow"></div>
-                                <div class="param-field" id="cfgNegPrompt"></div>
-                            </div>
-                            <div class="param-section">
-                                <div class="param-section-title">EPSILON / ETA CUTOFF</div>
-                                <div class="param-row" id="cutoffRow"></div>
-                            </div>
-                            <div class="param-section">
-                                <div class="param-section-title">SAMPLER ORDER</div>
-                                <p class="param-hint">Kéo để thay đổi thứ tự áp dụng sampler (trên cùng = áp dụng trước)</p>
-                                <div class="sampler-order-list" id="samplerOrderList"></div>
-                            </div>
-                        </div>
-
-                        <!-- Sub: Prompt (Special Prompts moved here) -->
-                        <div class="sub-tab-panel" id="subtab-prompt">
-                            <div class="param-section">
-                                <div class="param-section-title">PROMPT TEMPLATES</div>
-                                <p class="param-hint">Sử dụng <code>{{char}}</code> và <code>{{user}}</code> macros.</p>
-                                <div class="special-prompts-grid" id="specialPromptsGrid"></div>
-                            </div>
-                        </div>
-
-                        <!-- Sub: Other -->
-                        <div class="sub-tab-panel" id="subtab-other">
-                            <div class="param-section">
-                                <div class="param-section-title">MISC SETTINGS</div>
-                                <div class="settings-grid" id="miscSettingsGrid"></div>
-                            </div>
-                            <div class="param-section">
-                                <div class="param-section-title">BOOLEAN FLAGS</div>
-                                <div class="bool-flags-grid" id="boolFlagsGrid"></div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tab: JSON Preview -->
-                <div class="tab-panel" id="tab-json">
-                    <div class="section-title">Raw JSON Output</div>
-                    <div class="json-preview-container">
-                        <button class="btn btn-ghost copy-json-btn" id="btnCopyJson" title="Copy JSON">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                            Copy
-                        </button>
-                        <div class="json-preview" id="jsonPreview">
-                            <pre id="jsonPreviewContent"></pre>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </main>
+<div class="bg-effects">
+    <div class="orb"></div>
+    <div class="orb"></div>
+    <div class="orb"></div>
 </div>
 
-<!-- Prompt Edit Modal -->
-<div class="modal-overlay" id="promptModal">
-    <div class="modal">
-        <div class="modal-header">
-            <h3 id="modalTitle">Edit Prompt</h3>
-            <button class="btn btn-ghost" id="btnCloseModal">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:18px;height:18px"><path d="M18 6L6 18M6 6l12 12"/></svg>
-            </button>
+<div class="content">
+    <div class="brand">
+        <div class="brand-icon">⚡</div>
+        <div class="brand-name">Roxie <span>Tools</span></div>
+    </div>
+    <p class="tagline">
+        Bộ công cụ hỗ trợ cho SillyTavern & AI chatting — quản lý preset, prompt builder, và nhiều hơn nữa.
+    </p>
+
+    <div class="tools-label">Công cụ</div>
+    <div class="tools-grid">
+        <!-- Preset Manager -->
+        <a href="/preset/" class="tool-card">
+            <div class="tool-card-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+            <div class="tool-card-icon preset">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
+            </div>
+            <div class="tool-card-title">
+                ST Preset Manager
+                <span class="badge-live">Live</span>
+            </div>
+            <div class="tool-card-desc">
+                Visual editor cho SillyTavern presets — kéo thả prompt, chỉnh sampling, xuất JSON.
+            </div>
+        </a>
+
+        <!-- Prompt Builder (coming soon) -->
+        <div class="tool-card" style="cursor: default; opacity: 0.6;">
+            <div class="tool-card-icon coming">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="tool-card-title">
+                Prompt Builder
+                <span class="badge-soon">Sắp ra mắt</span>
+            </div>
+            <div class="tool-card-desc">
+                Tạo và test system prompts cho nhân vật AI — có preview trực tiếp.
+            </div>
         </div>
-        <div class="modal-body">
-            <div class="form-row">
-                <div class="form-group">
-                    <label class="form-label">Name</label>
-                    <input class="form-input" id="modalPromptName" placeholder="Prompt name">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Role</label>
-                    <select class="form-select" id="modalPromptRole">
-                        <option value="system">System</option>
-                        <option value="user">User</option>
-                        <option value="assistant">Assistant</option>
-                    </select>
-                </div>
+
+        <!-- Character Inspector (coming soon) -->
+        <div class="tool-card" style="cursor: default; opacity: 0.6;">
+            <div class="tool-card-icon coming">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
             </div>
-            <div class="form-group">
-                <label class="form-label">Identifier</label>
-                <input class="form-input" id="modalPromptId" placeholder="unique_identifier" style="font-family:'JetBrains Mono',monospace; font-size:0.82rem;">
+            <div class="tool-card-title">
+                Character Inspector
+                <span class="badge-soon">Sắp ra mắt</span>
             </div>
-            <div class="form-group">
-                <label class="form-label">Content</label>
-                <textarea class="form-textarea" id="modalPromptContent" placeholder="Write your prompt here... Use {{char}} and {{user}} macros." rows="8"></textarea>
+            <div class="tool-card-desc">
+                Xem và sửa character card (PNG/JSON) — kiểm tra field, lore, greeting.
             </div>
-            <div class="form-group" style="display:flex; align-items:center; gap:10px;">
-                <label class="toggle-switch">
-                    <input type="checkbox" id="modalPromptMarker">
-                    <span class="toggle-slider"></span>
-                </label>
-                <span style="font-size:0.82rem; color:var(--text-secondary);">This is a marker (content injected by engine)</span>
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn btn-danger" id="btnDeletePrompt" style="margin-right:auto;">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2L5 6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                Delete
-            </button>
-            <button class="btn btn-secondary" id="btnCancelModal">Cancel</button>
-            <button class="btn btn-primary" id="btnSavePrompt">Save Changes</button>
         </div>
     </div>
 </div>
 
-<!-- Toast container -->
-<div class="toast-container" id="toastContainer"></div>
+<div class="footer">
+    Made with ⚡ by <a href="https://roxie.cloud" target="_blank">Roxie</a>
+</div>
 
-<script src="app.js"></script>
 </body>
 </html>
