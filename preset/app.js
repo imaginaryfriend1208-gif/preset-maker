@@ -8,10 +8,11 @@
 
     // ==================== STATE ====================
     const state = {
-        presets: [],       // Array of { name, data, fileName }
+        presets: [],       // Array of { id, name, data, fileName }
         activeIndex: -1,   // Index into presets[]
         editingPromptId: null,
         isNewPrompt: false,
+        saveTimer: null,
     };
 
     // Known marker identifiers (content injected by ST engine)
@@ -158,16 +159,23 @@
                 return;
             }
             const reader = new FileReader();
-            reader.onload = (e) => {
+            reader.onload = async (e) => {
                 try {
                     const data = JSON.parse(e.target.result);
                     const name = file.name.replace(/\.json$/i, '');
-                    state.presets.push({ name, data, fileName: file.name });
+                    // Save to server
+                    const res = await fetch('/api/presets', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ name, data }),
+                    });
+                    const result = await res.json();
+                    state.presets.push({ id: result.id, name, data, fileName: file.name });
                     renderPresetList();
                     if (state.presets.length === 1) selectPreset(0);
-                    toast(`Loaded "${name}"`);
+                    toast(`Uploaded "${name}"`);
                 } catch (err) {
-                    toast(`Failed to parse "${file.name}": ${err.message}`, 'error');
+                    toast(`Failed to load "${file.name}": ${err.message}`, 'error');
                 }
             };
             reader.readAsText(file);
@@ -206,12 +214,26 @@
     });
 
     // ==================== NEW PRESET ====================
-    $('btnNewPreset').addEventListener('click', () => {
+    $('btnNewPreset').addEventListener('click', async () => {
         const data = createBlankPreset();
-        state.presets.push({ name: 'New Preset', data, fileName: 'new_preset.json' });
-        renderPresetList();
-        selectPreset(state.presets.length - 1);
-        toast('Created new blank preset');
+        try {
+            const res = await fetch('/api/presets', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: 'New Preset', data }),
+            });
+            const result = await res.json();
+            state.presets.push({ id: result.id, name: 'New Preset', data, fileName: 'new_preset.json' });
+            renderPresetList();
+            selectPreset(state.presets.length - 1);
+            toast('Created new blank preset');
+        } catch (err) {
+            // Fallback: still add locally
+            state.presets.push({ name: 'New Preset', data, fileName: 'new_preset.json' });
+            renderPresetList();
+            selectPreset(state.presets.length - 1);
+            toast('Created locally (server save failed)', 'error');
+        }
     });
 
     function createBlankPreset() {
@@ -317,8 +339,16 @@
                 </div>
                 <button class="preset-remove" title="Remove from list">✕</button>
             `;
-            item.addEventListener('click', (e) => {
+            item.addEventListener('click', async (e) => {
                 if (e.target.closest('.preset-remove')) {
+                    // Delete from server
+                    if (preset.id) {
+                        try {
+                            await fetch(`/api/presets/${preset.id}`, { method: 'DELETE' });
+                        } catch (err) {
+                            console.error('Server delete failed:', err);
+                        }
+                    }
                     state.presets.splice(i, 1);
                     if (state.activeIndex === i) {
                         state.activeIndex = -1;
@@ -327,6 +357,7 @@
                         state.activeIndex--;
                     }
                     renderPresetList();
+                    toast('Preset deleted');
                     return;
                 }
                 selectPreset(i);
@@ -952,6 +983,28 @@
     function renderJsonPreview(data) {
         const json = JSON.stringify(data, null, 2);
         jsonPreviewContent.innerHTML = syntaxHighlightJSON(escapeHtml(json));
+        // Auto-save to server (debounced)
+        scheduleAutoSave();
+    }
+
+    // ==================== AUTO-SAVE ====================
+    function scheduleAutoSave() {
+        if (state.saveTimer) clearTimeout(state.saveTimer);
+        state.saveTimer = setTimeout(() => autoSave(), 1500);
+    }
+
+    async function autoSave() {
+        const preset = state.presets[state.activeIndex];
+        if (!preset || !preset.id) return;
+        try {
+            await fetch(`/api/presets/${preset.id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: preset.name, data: preset.data }),
+            });
+        } catch (err) {
+            console.error('Auto-save failed:', err);
+        }
     }
 
     // ==================== COPY JSON ====================
@@ -1025,5 +1078,28 @@
     };
 
     // ==================== INIT ====================
-    showEmptyState();
+    async function init() {
+        showEmptyState();
+        // Load presets from server
+        try {
+            const res = await fetch('/api/presets');
+            if (res.ok) {
+                const serverPresets = await res.json();
+                if (serverPresets.length > 0) {
+                    state.presets = serverPresets.map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        data: p.data,
+                        fileName: p.fileName,
+                    }));
+                    renderPresetList();
+                    selectPreset(0);
+                    toast(`Loaded ${serverPresets.length} preset(s) from server`);
+                }
+            }
+        } catch (err) {
+            console.log('No server presets or running locally:', err.message);
+        }
+    }
+    init();
 })();

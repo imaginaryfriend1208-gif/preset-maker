@@ -3,6 +3,10 @@
     "version": "1.0.0",
     "private": true,
     "scripts": {
-        "start": "npx -y serve . -l $PORT --no-clipboard"
+        "start": "node server.js",
+        "dev": "node server.js"
+    },
+    "dependencies": {
+        "express": "^4.21.0"
     }
 }
