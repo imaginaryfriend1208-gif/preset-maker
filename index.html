@@ -196,6 +196,21 @@
             color: var(--accent-light);
         }
 
+        .tool-card-icon.chat {
+            background: linear-gradient(135deg, rgba(244, 114, 182, 0.2), rgba(236, 72, 153, 0.1));
+            color: #f472b6;
+        }
+
+        .tool-card-icon.status {
+            background: linear-gradient(135deg, rgba(52, 211, 153, 0.2), rgba(16, 185, 129, 0.1));
+            color: #34d399;
+        }
+
+        .tool-card-icon.copilot {
+            background: linear-gradient(135deg, rgba(56, 189, 248, 0.2), rgba(14, 165, 233, 0.1));
+            color: #38bdf8;
+        }
+
         .tool-card-icon.coming {
             background: rgba(107, 114, 128, 0.15);
             color: var(--text-muted);
@@ -296,6 +311,23 @@
 
     <div class="tools-label">Công cụ</div>
     <div class="tools-grid">
+        <!-- Webchat Adrinas -->
+        <a href="https://www.roxie.cloud/" class="tool-card" target="_blank">
+            <div class="tool-card-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+            <div class="tool-card-icon chat">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            </div>
+            <div class="tool-card-title">
+                Adrinas Webchat
+                <span class="badge-live">Live</span>
+            </div>
+            <div class="tool-card-desc">
+                Chat với nhân vật AI yêu thích — giao diện đẹp, hỗ trợ đa model, đồng bộ cloud.
+            </div>
+        </a>
+
         <!-- Preset Manager -->
         <a href="preset/" class="tool-card">
             <div class="tool-card-arrow">
@@ -305,41 +337,47 @@
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
             </div>
             <div class="tool-card-title">
-                ST Preset Manager
+                Custom Preset
                 <span class="badge-live">Live</span>
             </div>
             <div class="tool-card-desc">
-                Visual editor cho SillyTavern presets — kéo thả prompt, chỉnh sampling, xuất JSON.
+                Hỗ trợ tạo và chỉnh sửa SillyTavern preset — kéo thả prompt, chỉnh sampling, xuất JSON.
             </div>
         </a>
 
-        <!-- Prompt Builder (coming soon) -->
-        <div class="tool-card" style="cursor: default; opacity: 0.6;">
-            <div class="tool-card-icon coming">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        <!-- Check Status Key -->
+        <a href="https://api.roxie.cloud/check" class="tool-card" target="_blank">
+            <div class="tool-card-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+            <div class="tool-card-icon status">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             </div>
             <div class="tool-card-title">
-                Prompt Builder
-                <span class="badge-soon">Sắp ra mắt</span>
+                Check API Key
+                <span class="badge-live">Live</span>
             </div>
             <div class="tool-card-desc">
-                Tạo và test system prompts cho nhân vật AI — có preview trực tiếp.
+                Kiểm tra trạng thái API key — xem key còn hoạt động, số request đã dùng.
             </div>
-        </div>
+        </a>
 
-        <!-- Character Inspector (coming soon) -->
-        <div class="tool-card" style="cursor: default; opacity: 0.6;">
-            <div class="tool-card-icon coming">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        <!-- Copilot Free Models -->
+        <a href="https://cop.roxie.cloud/" class="tool-card" target="_blank">
+            <div class="tool-card-arrow">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+            <div class="tool-card-icon copilot">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
             </div>
             <div class="tool-card-title">
-                Character Inspector
-                <span class="badge-soon">Sắp ra mắt</span>
+                Free Models
+                <span class="badge-live">Live</span>
             </div>
             <div class="tool-card-desc">
-                Xem và sửa character card (PNG/JSON) — kiểm tra field, lore, greeting.
+                Kéo model AI miễn phí bằng thẻ Visa — truy cập GPT, Claude, Gemini không giới hạn.
             </div>
-        </div>
+        </a>
     </div>
 </div>
 
