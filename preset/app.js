@@ -994,7 +994,36 @@
         });
     });
 
+    // ==================== MOBILE SIDEBAR TOGGLE ====================
+    const sidebar = document.querySelector('.sidebar');
+    const sidebarOverlay = $('sidebarOverlay');
+    const sidebarToggle = $('sidebarToggle');
+
+    function openSidebar() {
+        sidebar.classList.add('open');
+        sidebarOverlay.classList.add('visible');
+    }
+    function closeSidebar() {
+        sidebar.classList.remove('open');
+        sidebarOverlay.classList.remove('visible');
+    }
+
+    if (sidebarToggle) {
+        sidebarToggle.addEventListener('click', () => {
+            sidebar.classList.contains('open') ? closeSidebar() : openSidebar();
+        });
+    }
+    if (sidebarOverlay) {
+        sidebarOverlay.addEventListener('click', closeSidebar);
+    }
+
+    // Auto-close sidebar on mobile when preset selected
+    const origSelectPreset = selectPreset;
+    selectPreset = function(index) {
+        origSelectPreset(index);
+        if (window.innerWidth <= 680) closeSidebar();
+    };
+
     // ==================== INIT ====================
     showEmptyState();
 })();
-
